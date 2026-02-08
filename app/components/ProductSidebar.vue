@@ -1,18 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+const cartStore = useCartStore();
+const roomStore = useRoomStore();
 
-const props = defineProps<{
-  furniture: PlacedFurniture[];
-  cart: string[];
-}>();
-
-const emit = defineEmits<{
-  (e: 'addToCart' | 'removeFromCart', id: string): void;
-}>();
-
-// Grouping logic moved to a computed property
 const groupedEntries = computed(() => {
-  const grouped = props.furniture.reduce(
+  const grouped = roomStore.furnitures.reduce(
     (acc, item) => {
       acc[item.id] ||= { item, count: 0 };
       acc[item.id]!.count++;
@@ -29,13 +20,9 @@ const totalPrice = computed(() =>
 
 const cartTotal = computed(() =>
   groupedEntries.value
-    .filter(({ item }) => props.cart.includes(item.id))
+    .filter(({ item }) => cartStore.items.includes(item.id))
     .reduce((sum, { item, count }) => sum + item.price * count, 0),
 );
-
-const clearCart = () => {
-  props.cart.forEach(id => emit('removeFromCart', id));
-};
 </script>
 
 <template>
@@ -96,11 +83,11 @@ const clearCart = () => {
         </div>
 
         <button
-          v-if="cart.includes(item.id)"
+          v-if="cartStore.items.includes(item.id)"
           type="button"
           class="flex items-center justify-center w-8 h-8 rounded-md bg-accent text-accent-foreground transition-colors hover:bg-accent/80 shrink-0"
           :aria-label="`Remove ${item.name} from cart`"
-          @click="emit('removeFromCart', item.id)"
+          @click="cartStore.remove(item.id)"
         >
           <UIcon
             name="lucide:check"
@@ -112,7 +99,7 @@ const clearCart = () => {
           type="button"
           class="flex items-center justify-center w-8 h-8 rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shrink-0"
           :aria-label="`Add ${item.name} to cart`"
-          @click="emit('addToCart', item.id)"
+          @click="cartStore.add(item.id)"
         >
           <UIcon
             name="lucide:plus"
@@ -149,12 +136,12 @@ const clearCart = () => {
       </div>
 
       <UButton
-        v-if="cart.length > 0"
+        v-if="cartStore.empty"
         variant="outline"
         icon="lucide:trash-2"
         class="w-full flex justify-center"
         :ui="{ leadingIcon: 'size-3 mr-2' }"
-        @click="clearCart"
+        @click="cartStore.clear"
       >
         Clear Cart
       </UButton>

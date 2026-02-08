@@ -1,9 +1,5 @@
 <script setup lang="ts">
-// Props definition
-const props = defineProps<{
-  config: RoomConfig;
-  furniture: PlacedFurniture[];
-}>();
+const roomStore = useRoomStore();
 
 // Constants & State
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -16,10 +12,10 @@ const hoveredId = ref<string | null>(null);
 const padding = 60;
 
 // Computed values for SVG sizing
-const svgWidth = computed(() => props.config.width + padding * 2);
-const svgHeight = computed(() => props.config.depth + padding * 2);
+const svgWidth = computed(() => roomStore.config.width + padding * 2);
+const svgHeight = computed(() => roomStore.config.depth + padding * 2);
 
-const roomLabel = computed(() => ROOM_TYPE_LABELS[props.config.type] || props.config.type);
+const roomLabel = computed(() => ROOM_TYPE_LABELS[roomStore.config.type] || roomStore.config.type);
 </script>
 
 <template>
@@ -29,7 +25,7 @@ const roomLabel = computed(() => ROOM_TYPE_LABELS[props.config.type] || props.co
         Floor Plan
       </h2>
       <span class="text-xs text-muted-foreground font-mono">
-        {{ config.width }} x {{ config.depth }} cm &middot; {{ roomLabel }}
+        {{ roomStore.config.width }} x {{ roomStore.config.depth }} cm &middot; {{ roomLabel }}
       </span>
     </template>
 
@@ -37,7 +33,7 @@ const roomLabel = computed(() => ROOM_TYPE_LABELS[props.config.type] || props.co
       :viewBox="`0 0 ${svgWidth} ${svgHeight}`"
       class="w-full h-auto"
       role="img"
-      :aria-label="`Top-down floor plan of ${roomLabel}, ${config.width}cm by ${config.depth}cm`"
+      :aria-label="`Top-down floor plan of ${roomLabel}, ${roomStore.config.width}cm by ${roomStore.config.depth}cm`"
     >
       <defs>
         <pattern
@@ -71,30 +67,30 @@ const roomLabel = computed(() => ROOM_TYPE_LABELS[props.config.type] || props.co
       <rect
         :x="padding"
         :y="padding"
-        :width="config.width"
-        :height="config.depth"
+        :width="roomStore.config.width"
+        :height="roomStore.config.depth"
         fill="hsl(40 25% 95%)"
       />
       <rect
         :x="padding"
         :y="padding"
-        :width="config.width"
-        :height="config.depth"
+        :width="roomStore.config.width"
+        :height="roomStore.config.depth"
         fill="url(#grid)"
       />
       <rect
         :x="padding"
         :y="padding"
-        :width="config.width"
-        :height="config.depth"
+        :width="roomStore.config.width"
+        :height="roomStore.config.depth"
         fill="url(#grid-major)"
       />
 
       <rect
         :x="padding"
         :y="padding"
-        :width="config.width"
-        :height="config.depth"
+        :width="roomStore.config.width"
+        :height="roomStore.config.depth"
         fill="none"
         stroke="hsl(30 10% 20%)"
         stroke-width="3"
@@ -104,45 +100,45 @@ const roomLabel = computed(() => ROOM_TYPE_LABELS[props.config.type] || props.co
         <line
           :x1="padding"
           :y1="padding - 25"
-          :x2="padding + config.width"
+          :x2="padding + roomStore.config.width"
           :y2="padding - 25"
           stroke="hsl(30 10% 55%)"
           stroke-width="0.8"
         />
         <text
-          :x="padding + config.width / 2"
+          :x="padding + roomStore.config.width / 2"
           :y="padding - 30"
           text-anchor="middle"
           font-size="11"
           fill="hsl(30 10% 40%)"
           font-family="monospace"
         >
-          {{ config.width }} cm
+          {{ roomStore.config.width }} cm
         </text>
 
         <line
           :x1="padding - 25"
           :y1="padding"
           :x2="padding - 25"
-          :y2="padding + config.depth"
+          :y2="padding + roomStore.config.depth"
           stroke="hsl(30 10% 55%)"
           stroke-width="0.8"
         />
         <text
           :x="padding - 30"
-          :y="padding + config.depth / 2"
+          :y="padding + roomStore.config.depth / 2"
           text-anchor="middle"
           font-size="11"
           fill="hsl(30 10% 40%)"
           font-family="monospace"
-          :transform="`rotate(-90, ${padding - 30}, ${padding + config.depth / 2})`"
+          :transform="`rotate(-90, ${padding - 30}, ${padding + roomStore.config.depth / 2})`"
         >
-          {{ config.depth }} cm
+          {{ roomStore.config.depth }} cm
         </text>
       </g>
 
       <g
-        v-for="(item, index) in furniture"
+        v-for="(item, index) in roomStore.furnitures"
         :key="`${item.id}-${index}`"
         :transform="`translate(${padding + item.x}, ${padding + item.y})`"
         class="cursor-pointer"
@@ -186,7 +182,7 @@ const roomLabel = computed(() => ROOM_TYPE_LABELS[props.config.type] || props.co
       </g>
 
       <text
-        v-if="furniture.length === 0"
+        v-if="roomStore.empty"
         :x="svgWidth / 2"
         :y="svgHeight / 2"
         text-anchor="middle"
