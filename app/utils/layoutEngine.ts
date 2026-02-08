@@ -38,14 +38,14 @@ function generateBedroomLayout(
   items: PlacedFurniture[],
   gap: number,
 ): PlacedFurniture[] {
-  if (width > 300) {
-    // King bed centred
+  // Check both width AND depth for King layout
+  if (width > 300 && depth >= 300) {
+    // --- King Bed Layout (Unchanged) ---
     const bed = findItem('king-bed');
     const bedX = (width - bed.widthCm) / 2;
     const bedY = depth - bed.depthCm - gap;
     items.push(place('king-bed', bedX, bedY));
 
-    // Bedside tables flanking
     const table = findItem('bedside-table');
     const leftTableX = bedX - table.widthCm - 10;
     if (leftTableX >= gap) {
@@ -56,19 +56,19 @@ function generateBedroomLayout(
       items.push(place('bedside-table', rightTableX, bedY + (bed.depthCm - table.depthCm)));
     }
 
-    // Wardrobe on the opposite wall if space allows
     const wardrobe = findItem('wardrobe');
     if (width >= wardrobe.widthCm + gap * 2) {
       items.push(place('wardrobe', gap, gap));
     }
 
-    // Dresser if there's room next to wardrobe
     const dresser = findItem('dresser');
     const dresserX = gap + wardrobe.widthCm + 20;
     if (dresserX + dresser.widthCm <= width - gap) {
       items.push(place('dresser', dresserX, gap));
     }
   } else {
+    // --- Single Bed Layout ---
+
     // Single bed against left wall
     const bed = findItem('single-bed');
     items.push(place('single-bed', gap, depth - bed.depthCm - gap));
@@ -78,18 +78,35 @@ function generateBedroomLayout(
     const tableX = gap + bed.widthCm + 10;
     if (tableX + table.widthCm <= width - gap) {
       items.push(
-        place(
-          'bedside-table',
-          tableX,
-          depth - table.depthCm - gap,
-        ),
+        place('bedside-table', tableX, depth - table.depthCm - gap),
       );
     }
 
-    // Wardrobe on opposite wall
+    // Wardrobe on opposite wall (Right side)
     const wardrobe = findItem('wardrobe');
+    let wardrobePlaced = false;
+    const wardrobeX = width - wardrobe.widthCm - gap;
+
     if (width >= wardrobe.widthCm + gap * 2) {
-      items.push(place('wardrobe', width - wardrobe.widthCm - gap, gap));
+      items.push(place('wardrobe', wardrobeX, gap));
+      wardrobePlaced = true;
+    }
+
+    // UPDATE: Dresser placement logic
+    const dresser = findItem('dresser');
+    let dresserX;
+
+    if (wardrobePlaced) {
+      // If wardrobe exists, place dresser to its left with a 20cm gap
+      dresserX = wardrobeX - 20 - dresser.widthCm;
+    } else {
+      // If no wardrobe, place dresser against the right wall
+      dresserX = width - dresser.widthCm - gap;
+    }
+
+    // Ensure there is space (x > gap) before placing
+    if (dresserX >= gap) {
+      items.push(place('dresser', dresserX, gap));
     }
   }
 
