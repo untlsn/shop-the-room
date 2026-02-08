@@ -1,11 +1,7 @@
 <script setup lang="ts">
 const roomStore = useRoomStore();
 
-const ROOM_TYPES: { value: RoomType; label: string }[] = [
-  { value: 'bedroom', label: 'Bedroom' },
-  { value: 'living-room', label: 'Living Room' },
-  { value: 'office', label: 'Office' },
-];
+const state = ref({ ...roomStore.config });
 </script>
 
 <template>
@@ -18,14 +14,15 @@ const ROOM_TYPES: { value: RoomType; label: string }[] = [
 
     <UForm
       class="grid gap-4"
-      @submit="roomStore.generate(); $emit('submit')"
+      :state
+      @submit="roomStore.generate({ ...state });"
     >
       <UFormField
         label="Room Type"
       >
         <USelect
-          v-model="roomStore.config.type"
-          :items="ROOM_TYPES"
+          v-model="state.type"
+          :items="roomStore.TYPES"
           value-key="value"
           class="w-full"
         />
@@ -37,7 +34,7 @@ const ROOM_TYPES: { value: RoomType; label: string }[] = [
         help="150 - 800 cm"
       >
         <UInputNumber
-          v-model="roomStore.config.width"
+          v-model="state.width"
           class="w-full"
           :min="150"
           :max="800"
@@ -51,7 +48,7 @@ const ROOM_TYPES: { value: RoomType; label: string }[] = [
         help="150 - 800 cm"
       >
         <UInputNumber
-          v-model="roomStore.config.depth"
+          v-model="state.depth"
           class="w-full"
           :min="150"
           :max="800"
