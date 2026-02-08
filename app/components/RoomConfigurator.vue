@@ -1,7 +1,14 @@
 <script setup lang="ts">
+import * as v from 'valibot';
+
 const roomStore = useRoomStore();
 
 const state = ref({ ...roomStore.config });
+const schema = v.object({
+  type: v.picklist(roomStore.TYPES.map(x => x.value)),
+  width: v.pipe(v.number(), v.minValue(150), v.maxValue(800)),
+  depth: v.pipe(v.number(), v.minValue(150), v.maxValue(800)),
+});
 </script>
 
 <template>
@@ -15,6 +22,7 @@ const state = ref({ ...roomStore.config });
     <UForm
       class="grid gap-4"
       :state
+      :schema
       @submit="roomStore.generate({ ...state });"
     >
       <UFormField
