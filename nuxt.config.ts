@@ -27,8 +27,9 @@ export default defineNuxtConfig({
   eslint: {
     config: {
       stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
+        commaDangle: 'always-multiline',
+        braceStyle: '1tbs',
+        semi: true,
       }
     }
   }
