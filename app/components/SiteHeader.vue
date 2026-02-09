@@ -1,7 +1,4 @@
 <script setup lang="ts">
-defineProps<{
-  cartCount: number;
-}>();
 </script>
 
 <template>
