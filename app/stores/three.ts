@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { objectWithRestAsync } from 'valibot';
 
 function createAmbientLight() {
   return new THREE.AmbientLight(0xffffff, 0.6);

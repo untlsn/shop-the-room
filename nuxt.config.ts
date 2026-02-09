@@ -12,8 +12,6 @@ export default defineNuxtConfig({
     '@pinia/colada-nuxt',
   ],
 
-  imports: { dirs: ['app/types'] },
-
   devtools: {
     enabled: true,
   },

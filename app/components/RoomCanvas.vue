@@ -19,16 +19,27 @@ const roomLabel = computed(() => ROOM_TYPE_LABELS[roomStore.config.type] || room
 </script>
 
 <template>
-  <UCard :ui="{ header: 'flex justify-between items-center' }">
+  <UCard :ui="{ header: 'flex items-center gap-4' }">
     <template #header>
       <h2 class="text-sm font-semibold uppercase tracking-widest text-foreground">
         Floor Plan
       </h2>
-      <span class="text-xs text-muted-foreground font-mono">
+      <UModal fullscreen>
+        <UButton class="ml-4">
+          <UIcon
+            name="lucide:layers"
+            class="w-5 h-5"
+          />
+          View 3D
+        </UButton>
+        <template #content="{ close }">
+          <LazyThreeRenderer @close="close" />
+        </template>
+      </UModal>
+      <span class="text-xs text-muted-foreground font-mono ml-auto">
         {{ roomStore.config.width }} x {{ roomStore.config.depth }} cm &middot; {{ roomLabel }}
       </span>
     </template>
-
     <svg
       :viewBox="`0 0 ${svgWidth} ${svgHeight}`"
       class="w-full h-auto"

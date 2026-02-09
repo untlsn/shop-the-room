@@ -3,6 +3,10 @@ const isFloorPlanView = ref(false);
 const containerRef = useTemplateRef('containerRef');
 const threeStore = useThreeStore();
 
+defineEmits<{
+  (e: 'close'): void;
+}>();
+
 onMounted(() => {
   if (!containerRef.value) return;
 
@@ -27,11 +31,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative w-screen h-screen overflow-hidden">
+  <div class="relative size-full m-auto overflow-hidden">
     <template v-if="!isFloorPlanView">
       <div
         ref="containerRef"
-        class="w-full h-full"
+        class="size-full"
       />
 
       <div class="absolute top-4 left-4 bg-black/60 text-white px-4 py-3 rounded-lg shadow-lg backdrop-blur-sm">
@@ -49,16 +53,20 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <button
-        class="absolute top-4 right-4 flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 font-medium"
+      <UButton
+        class="absolute top-4 right-4"
+        color="error"
+        @click="$emit('close')"
+      >
+        Close
+      </UButton>
+      <UButton
+        class="absolute bottom-4 right-4"
+        icon="lucide:layers"
         @click="isFloorPlanView = true"
       >
-        <UIcon
-          name="lucide:layers"
-          class="w-5 h-5"
-        />
         Floor Plan
-      </button>
+      </UButton>
     </template>
 
     <div
