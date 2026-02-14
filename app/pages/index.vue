@@ -1,5 +1,5 @@
 <script setup lang="ts">
-
+const roomStore = useRoomStore();
 </script>
 
 <template>
@@ -20,7 +20,10 @@
         <RoomLegend />
       </aside>
 
-      <RoomCanvas />
+      <RoomCanvas
+        :width="roomStore.config.width / 100"
+        :depth="roomStore.config.depth / 100"
+      />
 
       <aside class="order-2 lg:order-0">
         <ProductSidebar />

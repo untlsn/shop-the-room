@@ -1,11 +1,21 @@
 <script setup lang="ts">
 const rootRef = useTemplateRef('root');
 
-onMounted(() => {
-  if (!rootRef.value) return;
+const props = defineProps<{
+  width: number;
+  depth: number;
+}>();
 
-  const cleanup = processRoom(rootRef.value);
-  onUnmounted(cleanup);
+onMounted(() => {
+  watchEffect((onCleanup) => {
+    if (!rootRef.value || !props.depth || !props.width) return;
+    const cleanup = processRoom(rootRef.value, {
+      width: props.width,
+      depth: props.depth,
+    });
+
+    onCleanup(cleanup);
+  });
 });
 </script>
 

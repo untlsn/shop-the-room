@@ -1,14 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import type { ShallowReactive } from 'vue';
 
 const roomHeight = 2.5;
-const width = 5;
-const depth = 3;
 
 type Cords3D = readonly [x: number, y: number, z: number];
 type Cords2D = readonly [x: number, z: number];
 
-export function processRoom(wrapper: HTMLElement) {
+export function processRoom(wrapper: HTMLElement, { width, depth }: {
+  width: number;
+  depth: number;
+}) {
   const rect = wrapper.getBoundingClientRect();
   const scene = createScene();
 
@@ -42,16 +44,27 @@ export function processRoom(wrapper: HTMLElement) {
       position: convertEdgeToCenter(-width, roomHeight, 0),
       rotation: Math.PI / 2,
     }),
-    createFloor(),
+    createFloor(width, depth),
     new THREE.AmbientLight(0xffffff, 0.5),
     createPointLight(),
     createCube(),
   );
 
-  return runInLoop(() => {
+  let animationId: number;
+
+  const loop = () => {
+    animationId = requestAnimationFrame(loop);
     controls.update();
     renderer.render(scene, camera);
-  });
+  };
+
+  loop();
+
+  return () => {
+    cancelAnimationFrame(animationId);
+    renderer.domElement.remove();
+    renderer.dispose();
+  };
 }
 
 function createCube() {
@@ -102,9 +115,9 @@ function createWall({ size, position, rotation }: {
 
   return wall;
 }
-function createFloor() {
+function createFloor(...cords: Cords2D) {
   const floorMat = new THREE.MeshStandardMaterial({ color: 0xbc8e5a }); // Drewnopodobny
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), floorMat);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(...cords), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
 
@@ -115,19 +128,6 @@ function createPointLight() {
   pointLight.position.set(2, 3, 4);
 
   return pointLight;
-}
-
-function runInLoop(cb: () => void) {
-  let animationId: number;
-
-  const loop = () => {
-    animationId = requestAnimationFrame(loop);
-    cb();
-  };
-
-  loop();
-
-  return () => cancelAnimationFrame(animationId);
 }
 
 /**
