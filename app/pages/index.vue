@@ -20,10 +20,7 @@ const roomStore = useRoomStore();
         <RoomLegend />
       </aside>
 
-      <RoomCanvas
-        :width="roomStore.config.width / 100"
-        :depth="roomStore.config.depth / 100"
-      />
+      <RoomCanvas />
 
       <aside class="order-2 lg:order-0">
         <ProductSidebar />

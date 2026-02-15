@@ -10,7 +10,12 @@ type Cords2D = readonly [x: number, z: number];
 export function processRoom(wrapper: HTMLElement, { width, depth }: {
   width: number;
   depth: number;
+  furnitures: PlacedFurniture[];
 }) {
+  const furnitures = decisions.bigestBedroom({
+    width,
+    depth,
+  });
   const rect = wrapper.getBoundingClientRect();
   const scene = createScene();
 
@@ -22,32 +27,41 @@ export function processRoom(wrapper: HTMLElement, { width, depth }: {
 
   const verticalWallSize = [width, roomHeight] as const;
   const horizontalWallSize = [depth, roomHeight] as const;
+  const wallTexture = createWallTexture();
+
+  console.log(furnitures[0]);
 
   scene.add(
     createWall({
       size: verticalWallSize,
       position: convertEdgeToCenter(0, roomHeight, depth),
       rotation: Math.PI,
+      texture: wallTexture,
     }),
     createWall({
       size: verticalWallSize,
       position: convertEdgeToCenter(0, roomHeight, -depth),
       rotation: 0,
+      texture: wallTexture,
     }),
     createWall({
       size: horizontalWallSize,
       position: convertEdgeToCenter(width, roomHeight, 0),
       rotation: Math.PI / -2,
+      texture: wallTexture,
     }),
     createWall({
       size: horizontalWallSize,
       position: convertEdgeToCenter(-width, roomHeight, 0),
       rotation: Math.PI / 2,
+      texture: wallTexture,
     }),
     createFloor(width, depth),
-    new THREE.AmbientLight(0xffffff, 0.5),
+    new THREE.AmbientLight(0xffffff, 1),
     createPointLight(),
-    createCube(),
+    ...furnitures.filter(x => x != undefined).map((furniture) => {
+      return createCube(furniture.size, furniture.position);
+    }),
   );
 
   let animationId: number;
@@ -67,12 +81,15 @@ export function processRoom(wrapper: HTMLElement, { width, depth }: {
   };
 }
 
-function createCube() {
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
+function createCube(size: Cords3D, position: Cords3D) {
+  console.log({ size, position });
+  const geometry = new THREE.BoxGeometry(...size);
   const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 
   const cube = new THREE.Mesh(geometry, material);
-  cube.position.y = 0.5;
+  cube.position.x = position[0];
+  cube.position.y = position[1];
+  cube.position.z = position[2];
 
   return cube;
 }
@@ -97,14 +114,17 @@ function createRenderer(rect: DOMRect) {
   return renderer;
 }
 
-function createWall({ size, position, rotation }: {
+function createWall({ size, position, rotation, texture }: {
   size: Cords2D;
   position: Cords3D;
   rotation: number;
+  texture: ReturnType<typeof createWallTexture>;
 }) {
-  const material = new THREE.MeshStandardMaterial({ color: 0xeeeeee }); // Białe ściany
+  const material = new THREE.MeshStandardMaterial({ color: 0xeeeeee, ...texture });
+  const geometry = new THREE.PlaneGeometry(...size);
+  geometry.setAttribute('uv2', new THREE.BufferAttribute(geometry.attributes.uv!.array, 2));
 
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(...size), material);
+  const wall = new THREE.Mesh(geometry, material);
   wall.position.set(...position); // Ustawienie na krawędzi podłogi
   wall.receiveShadow = true;
   wall.castShadow = true;
@@ -115,17 +135,60 @@ function createWall({ size, position, rotation }: {
 
   return wall;
 }
+
+function createFloorTexture() {
+  const loader = new THREE.TextureLoader();
+
+  const map = loader.load('/textures/WoodFloor051_1K-JPG/WoodFloor051_1K-JPG_Color.jpg');
+  const normalMap = loader.load('/textures/WoodFloor051_1K-JPG/WoodFloor051_1K-JPG_NormalDX.jpg');
+  const roughnessMap = loader.load('/textures/WoodFloor051_1K-JPG/WoodFloor051_1K-JPG_Roughness.jpg');
+  const aoMap = loader.load('/textures/WoodFloor051_1K-JPG/WoodFloor051_1K-JPG_AmbientOcclusion.jpg');
+
+  [map, normalMap, roughnessMap, aoMap].forEach((texture) => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(4, 4);
+  });
+
+  return {
+    map,
+    normalMap,
+    roughnessMap,
+    aoMap,
+  };
+}
+
+function createWallTexture() {
+  const loader = new THREE.TextureLoader();
+
+  const normalMap = loader.load('/textures/Plaster001_1K-JPG/Plaster001_1K-JPG_NormalDX.jpg');
+  const roughnessMap = loader.load('/textures/Plaster001_1K-JPG/Plaster001_1K-JPG_Roughness.jpg');
+
+  [normalMap, roughnessMap].forEach((texture) => {
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(4, 4);
+  });
+
+  return {
+    normalMap,
+    roughnessMap,
+  };
+}
+
 function createFloor(...cords: Cords2D) {
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0xbc8e5a }); // Drewnopodobny
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(...cords), floorMat);
+  const material = new THREE.MeshStandardMaterial({
+    ...createFloorTexture(),
+    roughness: 0.8,
+  });
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(...cords), material);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
 
   return floor;
 }
 function createPointLight() {
-  const pointLight = new THREE.PointLight(0xffffff, 50);
-  pointLight.position.set(2, 3, 4);
+  const pointLight = new THREE.PointLight(0xffffff, 5);
+  pointLight.position.set(0.5, roomHeight, 0.5);
 
   return pointLight;
 }

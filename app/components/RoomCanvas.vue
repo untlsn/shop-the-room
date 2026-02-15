@@ -1,17 +1,15 @@
 <script setup lang="ts">
 const rootRef = useTemplateRef('root');
 
-const props = defineProps<{
-  width: number;
-  depth: number;
-}>();
+const roomStore = useRoomStore();
 
 onMounted(() => {
   watchEffect((onCleanup) => {
-    if (!rootRef.value || !props.depth || !props.width) return;
+    if (!rootRef.value || !roomStore.config.width || !roomStore.config.depth) return;
     const cleanup = processRoom(rootRef.value, {
-      width: props.width,
-      depth: props.depth,
+      width: roomStore.config.width / 100,
+      depth: roomStore.config.depth / 100,
+      furnitures: roomStore.furnitures,
     });
 
     onCleanup(cleanup);
