@@ -9,6 +9,7 @@ type FurnitureStaticData = {
 };
 
 export const furnitureStaticDataRecord = {
+  /* Bedroom */
   kingBed: {
     id: 'kingBed',
     name: 'King Size Bed',
@@ -44,9 +45,51 @@ export const furnitureStaticDataRecord = {
     price: 549,
     modelSource: '/models/dresser.glb',
   },
+
+  /* Living Room */
+  largeSofa: {
+    id: 'largeSofa',
+    name: 'Large Sofa',
+    size: new THREE.Vector3(2.2, 0.9, 0.9),
+    price: 899,
+    modelSource: '/models/large-sofa.glb',
+  },
+  smallSofa: {
+    id: 'smallSofa',
+    name: 'Small Sofa',
+    size: new THREE.Vector3(0.9, 0.9, 1.5),
+    price: 599,
+    modelSource: '/models/small-sofa.glb',
+  },
+  coffeeTable: {
+    id: 'coffeeTable',
+    name: 'Coffee Table',
+    size: new THREE.Vector3(1, 0.4, 0.6),
+    price: 199,
+    modelSource: '/models/coffee-table.glb',
+  },
+  tvStand: {
+    id: 'tvStand',
+    name: 'TV Media Unit',
+    size: new THREE.Vector3(1.6, 0.5, 0.4),
+    price: 349,
+    modelSource: '/models/tv-stand.glb',
+  },
+  bookshelf: {
+    id: 'bookshelf',
+    name: 'Bookshelf',
+    size: new THREE.Vector3(0.8, 1.8, 0.3),
+    price: 249,
+    modelSource: '/models/bookshelf.glb',
+  },
 } satisfies Record<string, FurnitureStaticData>;
 
-export function furnitureSelector(room: THREE.Vector2): FurnitureComputedData[] {
+export function furnitureSelector(room: THREE.Vector2, roomType: RoomType): FurnitureComputedData[] {
+  if (roomType == 'living-room') {
+    if (room.x >= 3 && room.y >= 3) return decisions.grandLivingRoom(room);
+    return decisions.standardLivingRoom(room);
+  }
+
   if (room.x >= 3 && room.y >= 3) return decisions.bigestBedroom(room);
   return decisions.tinyRoom(room);
 }
@@ -57,7 +100,6 @@ interface FurnitureComputedData extends FurnitureStaticData {
 }
 
 export const decisions = {
-  // For rooms at least 300x300
   bigestBedroom(room) {
     const { kingBed, nightstand, wardrobe, dresser } = furnitureStaticDataRecord;
 
@@ -118,6 +160,44 @@ export const decisions = {
       {
         ...dresser,
         position: new THREE.Vector3((room.x / 2) - (dresser.size.x / 2), 0, (room.y / 2)),
+        rotation: new THREE.Euler(0, Math.PI, 0),
+      },
+    ];
+  },
+
+  grandLivingRoom(room: THREE.Vector2) {
+    const { largeSofa, coffeeTable, tvStand, bookshelf } = furnitureStaticDataRecord;
+    return [
+      { ...largeSofa, position: new THREE.Vector3(0, largeSofa.size.y / 2, -(room.y / 2) + (largeSofa.size.z / 2)) },
+      { ...coffeeTable, position: new THREE.Vector3(0, 0, -(room.y / 2) + 1.5) },
+      {
+        ...tvStand,
+        position: new THREE.Vector3(0, 0, (room.y / 2) - (tvStand.size.z / 2)),
+        rotation: new THREE.Euler(0, Math.PI, 0),
+      },
+      {
+        ...bookshelf,
+        position: new THREE.Vector3(
+          -(room.x / 2) + (bookshelf.size.x / 2),
+          bookshelf.size.y / 2,
+          (room.y / 2) - (bookshelf.size.z / 2),
+        ),
+        rotation: new THREE.Euler(0, Math.PI, 0),
+      },
+    ];
+  },
+
+  standardLivingRoom(room: THREE.Vector2) {
+    const { smallSofa, tvStand } = furnitureStaticDataRecord;
+    return [
+      {
+        ...smallSofa,
+        position: new THREE.Vector3(0, 0, -(room.y / 2) + (smallSofa.size.z / 4) + 0.1),
+        rotation: new THREE.Euler(0, Math.PI / 2, 0),
+      },
+      {
+        ...tvStand,
+        position: new THREE.Vector3(0, 0, (room.y / 2) - (tvStand.size.z / 2)),
         rotation: new THREE.Euler(0, Math.PI, 0),
       },
     ];
