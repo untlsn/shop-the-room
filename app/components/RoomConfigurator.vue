@@ -6,8 +6,8 @@ const roomStore = useRoomStore();
 const state = ref({ ...roomStore.config });
 const schema = v.object({
   type: v.picklist(roomStore.TYPES.map(x => x.value)),
-  width: v.pipe(v.number(), v.minValue(150), v.maxValue(800)),
-  depth: v.pipe(v.number(), v.minValue(150), v.maxValue(800)),
+  width: v.pipe(v.number(), v.minValue(200), v.maxValue(800)),
+  depth: v.pipe(v.number(), v.minValue(200), v.maxValue(800)),
 });
 </script>
 
@@ -39,12 +39,12 @@ const schema = v.object({
       <UFormField
         class="w-full"
         label="Width (cm)"
-        help="150 - 800 cm"
+        help="200 - 800 cm"
       >
         <UInputNumber
           v-model="state.width"
           class="w-full"
-          :min="150"
+          :min="200"
           :max="800"
           orientation="vertical"
         />
@@ -53,12 +53,12 @@ const schema = v.object({
       <UFormField
         class="w-full"
         label="Depth (cm)"
-        help="150 - 800 cm"
+        help="200 - 800 cm"
       >
         <UInputNumber
           v-model="state.depth"
           class="w-full"
-          :min="150"
+          :min="200"
           :max="800"
           orientation="vertical"
         />

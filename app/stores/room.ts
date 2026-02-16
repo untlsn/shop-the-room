@@ -1,7 +1,6 @@
 const ROOM_TYPES: { value: RoomType; label: string }[] = [
   { value: 'bedroom', label: 'Bedroom' },
   { value: 'living-room', label: 'Living Room' },
-  { value: 'office', label: 'Office' },
 ];
 
 export const useRoomStore = defineStore('furniture', () => {

@@ -72,7 +72,7 @@ const cartTotal = computed(() =>
             </span>
           </p>
           <p class="text-xs text-muted-foreground">
-            {{ item.widthCm }} x {{ item.depthCm }} cm
+            {{ item.width }} x {{ item.depth }} cm
           </p>
         </div>
 

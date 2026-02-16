@@ -9,17 +9,19 @@ export default defineNuxtConfig({
     '@nuxt/scripts',
     '@nuxt/test-utils',
     '@pinia/nuxt',
-    '@pinia/colada-nuxt'
+    '@pinia/colada-nuxt',
   ],
 
+  imports: { dirs: ['app/types'] },
+
   devtools: {
-    enabled: true
+    enabled: true,
   },
 
   css: ['~/assets/css/main.css'],
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
   },
 
   compatibilityDate: '2025-01-15',
@@ -30,7 +32,7 @@ export default defineNuxtConfig({
         commaDangle: 'always-multiline',
         braceStyle: '1tbs',
         semi: true,
-      }
-    }
-  }
-})
+      },
+    },
+  },
+});
