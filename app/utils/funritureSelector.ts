@@ -95,8 +95,9 @@ export const furnitureStaticDataRecord = {
   },
 } satisfies Record<string, FurnitureStaticData>;
 
-export function furnitureSelector(room: THREE.Vector2, roomType: RoomType): FurnitureComputedData[] {
-  if (roomType == 'living-room') {
+export function furnitureSelector(config: RoomConfig): FurnitureComputedData[] {
+  const room = new THREE.Vector2(config.width / 100, config.depth / 100);
+  if (config.type == 'living-room') {
     if (room.x >= 3 && room.y >= 3) return decisions.grandLivingRoom(room);
     return decisions.standardLivingRoom(room);
   }

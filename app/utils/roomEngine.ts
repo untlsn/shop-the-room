@@ -4,14 +4,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const roomHeight = 2.5;
 
-type Cords3D = readonly [x: number, y: number, z: number];
-type Cords2D = readonly [x: number, z: number];
-
-export function processRoom(wrapper: HTMLElement, { width, depth, furnitures }: {
+export function processRoom(wrapper: HTMLElement, config: {
   width: number;
   depth: number;
   furnitures: FurnitureComputedData[];
 }) {
+  const room = new THREE.Vector3(config.width, roomHeight, config.depth);
   const rect = wrapper.getBoundingClientRect();
   const scene = createScene();
 
@@ -21,43 +19,43 @@ export function processRoom(wrapper: HTMLElement, { width, depth, furnitures }: 
   const camera = createCamera(rect);
   const controls = new OrbitControls(camera, renderer.domElement);
 
-  const verticalWallSize = [width, roomHeight] as const;
-  const horizontalWallSize = [depth, roomHeight] as const;
+  const verticalWallSize = new THREE.Vector2(room.x, room.y);
+  const horizontalWallSize = new THREE.Vector2(room.z, room.y);
   const wallTexture = createWallTexture();
 
   scene.add(
     createWall({
       size: verticalWallSize,
-      position: convertEdgeToCenter(0, roomHeight, depth),
+      position: convertEdgeToCenter(0, roomHeight, room.z),
       rotation: Math.PI,
       texture: wallTexture,
     }),
     createWall({
       size: verticalWallSize,
-      position: convertEdgeToCenter(0, roomHeight, -depth),
+      position: convertEdgeToCenter(0, roomHeight, -room.z),
       rotation: 0,
       texture: wallTexture,
     }),
     createWall({
       size: horizontalWallSize,
-      position: convertEdgeToCenter(width, roomHeight, 0),
+      position: convertEdgeToCenter(room.x, roomHeight, 0),
       rotation: Math.PI / -2,
       texture: wallTexture,
     }),
     createWall({
       size: horizontalWallSize,
-      position: convertEdgeToCenter(-width, roomHeight, 0),
+      position: convertEdgeToCenter(-room.x, roomHeight, 0),
       rotation: Math.PI / 2,
       texture: wallTexture,
     }),
-    createFloor(width, depth),
+    createFloor(room.x, room.z),
     new THREE.AmbientLight(0xffffff, 1),
     createPointLight(),
   );
 
   const loader = new GLTFLoader();
 
-  furnitures.forEach(async (furniture) => {
+  config.furnitures.forEach(async (furniture) => {
     const { scene: model } = await loader.loadAsync(furniture.modelSource);
     setAbsoluteScale(model, furniture.size);
     model.position.copy(furniture.position);
@@ -103,8 +101,8 @@ function createRenderer(rect: DOMRect) {
 }
 
 function createWall({ size, position, rotation, texture }: {
-  size: Cords2D;
-  position: Cords3D;
+  size: THREE.Vector2;
+  position: THREE.Vector3;
   rotation: number;
   texture: ReturnType<typeof createWallTexture>;
 }) {
@@ -113,7 +111,7 @@ function createWall({ size, position, rotation, texture }: {
   geometry.setAttribute('uv2', new THREE.BufferAttribute(geometry.attributes.uv!.array, 2));
 
   const wall = new THREE.Mesh(geometry, material);
-  wall.position.set(...position); // Ustawienie na krawędzi podłogi
+  wall.position.copy(position); // Ustawienie na krawędzi podłogi
   wall.receiveShadow = true;
   wall.castShadow = true;
 
@@ -162,13 +160,13 @@ function createWallTexture() {
   };
 }
 
-function createFloor(...cords: Cords2D) {
+function createFloor(x: number, y: number) {
   const material = new THREE.MeshStandardMaterial({
     ...createFloorTexture(),
     roughness: 0.8,
   });
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(...cords), material);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(x, y), material);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
 
@@ -186,8 +184,8 @@ function createPointLight() {
  * but because sizes of the room are defined from edge to edge
  * it's easier to just use this function istead of adding `/ 2` everywhere
  */
-function convertEdgeToCenter(...cords: Cords3D): Cords3D {
-  return [cords[0] / 2, cords[1] / 2, cords[2] / 2];
+function convertEdgeToCenter(x: number, y: number, z: number): THREE.Vector3 {
+  return new THREE.Vector3(x / 2, y / 2, z / 2);
 }
 function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THREE.Vector3, a?: boolean) {
   const box = new THREE.Box3().setFromObject(model);

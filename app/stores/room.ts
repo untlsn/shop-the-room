@@ -1,5 +1,3 @@
-import * as THREE from 'three';
-
 const ROOM_TYPES: { value: RoomType; label: string }[] = [
   { value: 'bedroom', label: 'Bedroom' },
   { value: 'living-room', label: 'Living Room' },
@@ -12,12 +10,7 @@ export const useRoomStore = defineStore('furniture', () => {
     type: 'bedroom',
   });
 
-  const furnitures = computed(() => {
-    return furnitureSelector(new THREE.Vector2(
-      config.value.width / 100,
-      config.value.depth / 100,
-    ), config.value.type);
-  });
+  const furnitures = computed(() => furnitureSelector(config.value));
 
   const cartStore = useCartStore();
 
