@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import type { ShallowReactive } from 'vue';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const roomHeight = 2.5;
 
@@ -12,10 +12,11 @@ export function processRoom(wrapper: HTMLElement, { width, depth }: {
   depth: number;
   furnitures: PlacedFurniture[];
 }) {
-  const furnitures = decisions.bigestBedroom({
+  const furnitures = furnitureSelector(new THREE.Vector2(
     width,
     depth,
-  });
+  ));
+
   const rect = wrapper.getBoundingClientRect();
   const scene = createScene();
 
@@ -28,8 +29,6 @@ export function processRoom(wrapper: HTMLElement, { width, depth }: {
   const verticalWallSize = [width, roomHeight] as const;
   const horizontalWallSize = [depth, roomHeight] as const;
   const wallTexture = createWallTexture();
-
-  console.log(furnitures[0]);
 
   scene.add(
     createWall({
@@ -59,10 +58,17 @@ export function processRoom(wrapper: HTMLElement, { width, depth }: {
     createFloor(width, depth),
     new THREE.AmbientLight(0xffffff, 1),
     createPointLight(),
-    ...furnitures.filter(x => x != undefined).map((furniture) => {
-      return createCube(furniture.size, furniture.position);
-    }),
   );
+
+  const loader = new GLTFLoader();
+
+  furnitures.forEach(async (furniture) => {
+    const { scene: model } = await loader.loadAsync(furniture.modelSource);
+    setAbsoluteScale(model, furniture.size);
+    model.position.copy(furniture.position);
+    if (furniture.rotation) model.rotation.copy(furniture.rotation);
+    scene.add(model);
+  });
 
   let animationId: number;
 
@@ -79,19 +85,6 @@ export function processRoom(wrapper: HTMLElement, { width, depth }: {
     renderer.domElement.remove();
     renderer.dispose();
   };
-}
-
-function createCube(size: Cords3D, position: Cords3D) {
-  console.log({ size, position });
-  const geometry = new THREE.BoxGeometry(...size);
-  const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-
-  const cube = new THREE.Mesh(geometry, material);
-  cube.position.x = position[0];
-  cube.position.y = position[1];
-  cube.position.z = position[2];
-
-  return cube;
 }
 
 function createScene() {
@@ -200,4 +193,13 @@ function createPointLight() {
  */
 function convertEdgeToCenter(...cords: Cords3D): Cords3D {
   return [cords[0] / 2, cords[1] / 2, cords[2] / 2];
+}
+function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THREE.Vector3) {
+  const box = new THREE.Box3().setFromObject(model);
+  const modelActualSize = new THREE.Vector3();
+  box.getSize(modelActualSize);
+
+  model.scale.x = size.x / modelActualSize.x;
+  model.scale.y = size.y / modelActualSize.y;
+  model.scale.z = size.z / modelActualSize.z;
 }

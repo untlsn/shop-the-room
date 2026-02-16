@@ -10,6 +10,7 @@ export interface FurnitureItem {
   color: string;
   label: string;
   category: RoomType;
+  model: string;
 }
 
 export interface PlacedFurniture extends FurnitureItem {
@@ -31,33 +32,35 @@ export const furnitureCatalog: FurnitureItem[] = [
     name: 'King Size Bed',
     width: 2,
     depth: 2.1,
-    height: 0.5,
+    height: 0.8,
     price: 1299,
     color: '#a0856e',
     label: 'King Bed',
     category: 'bedroom',
+    model: '/models/king-bed.glb',
   },
   {
     id: 'single-bed',
     name: 'Single Bed',
     width: 1,
     depth: 2,
-    height: 0.45,
+    height: 1,
     price: 499,
     color: '#a0856e',
     label: 'Single Bed',
     category: 'bedroom',
   },
   {
-    id: 'bedside-table',
+    id: 'nightstand',
     name: 'Bedside Table',
-    width: 0.5,
-    depth: 0.45,
-    height: 0.6,
+    width: 0.4,
+    depth: 0.4,
+    height: 0.5,
     price: 149,
     color: '#c9b99a',
     label: 'Nightstand',
     category: 'bedroom',
+    model: '/models/nightstand.glb',
   },
   {
     id: 'wardrobe',
@@ -69,6 +72,7 @@ export const furnitureCatalog: FurnitureItem[] = [
     color: '#8b7355',
     label: 'Wardrobe',
     category: 'bedroom',
+    model: '/models/wardrobe.glb',
   },
   {
     id: 'dresser',
@@ -80,6 +84,7 @@ export const furnitureCatalog: FurnitureItem[] = [
     color: '#b09070',
     label: 'Dresser',
     category: 'bedroom',
+    model: '/models/dresser.glb',
   },
 
   // Living Room

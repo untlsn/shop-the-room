@@ -116,45 +116,50 @@ function generateBedroomLayout(
 type Cords3D = [x: number, y: number, z: number];
 
 export const decisions = {
-  bigestBedroom(room: { depth: number; width: number }): { id: string; position: Cords3D; rotation: Cords3D; size: Cords3D }[] {
+  bigestBedroom(room: { depth: number; width: number }): { id: string; position: Cords3D; rotation: Cords3D; size: Cords3D; model: string }[] {
     const bed = findItem('king-bed');
-    const table = findItem('bedside-table');
+    const table = findItem('nightstand');
     const wardrobe = findItem('wardrobe');
     const dresser = findItem('dresser');
 
     return [
       {
         id: 'king-bed',
+        model: bed.model,
         // Centered on the back wall (-z)
-        position: [0, bed.height / 2, -(room.depth / 2) + (bed.depth / 2)],
+        position: [0, 0, -(room.depth / 2) + (bed.depth / 2)],
         rotation: [0, 0, 0], // Facing forward (+z)
         size: [bed.width, bed.height, bed.depth],
       },
       {
-        id: 'bedside-table-left',
+        id: 'nightstand-left',
+        model: table.model,
         // Pinned to the left side of the bed, against the back wall (-z)
-        position: [-(bed.width / 2) - (table.width / 2), table.height / 2, -(room.depth / 2) + (table.depth / 2)],
+        position: [-(bed.width / 2) - (table.width / 2), 0, -(room.depth / 2) + (table.depth / 2)],
         rotation: [0, 0, 0],
         size: [table.width, table.height, table.depth],
       },
       {
-        id: 'bedside-table-right',
+        id: 'nightstand-right',
+        model: table.model,
         // Pinned to the right side of the bed, against the back wall (-z)
-        position: [(bed.width / 2) + (table.width / 2), table.height / 2, -(room.depth / 2) + (table.depth / 2)],
+        position: [(bed.width / 2) + (table.width / 2), 0, -(room.depth / 2) + (table.depth / 2)],
         rotation: [0, 0, 0],
         size: [table.width, table.height, table.depth],
       },
       {
         id: 'wardrobe',
+        model: wardrobe.model,
         // Pinned to the front-left corner (+z, -x), rotated to face the bed
-        position: [-(room.width / 2) + (wardrobe.width / 2), wardrobe.height / 2, (room.depth / 2) - (wardrobe.depth / 2)],
+        position: [-(room.width / 2) + (wardrobe.width / 2), 0, (room.depth / 2) - (wardrobe.depth / 2)],
         rotation: [0, Math.PI, 0], // Rotated 180 degrees to face -z
         size: [wardrobe.width, wardrobe.height, wardrobe.depth],
       },
       {
         id: 'dresser',
+        model: dresser.model,
         // Pinned to the front-right corner (+z, +x), rotated to face the bed
-        position: [(room.width / 2) - (dresser.width / 2), dresser.height / 2, (room.depth / 2) - (dresser.depth / 2)],
+        position: [(room.width / 2) - (dresser.width / 2), 0, (room.depth / 2) - (dresser.depth / 2)],
         rotation: [0, Math.PI, 0], // Rotated 180 degrees to face -z
         size: [dresser.width, dresser.height, dresser.depth],
       },
