@@ -194,10 +194,12 @@ function createPointLight() {
 function convertEdgeToCenter(...cords: Cords3D): Cords3D {
   return [cords[0] / 2, cords[1] / 2, cords[2] / 2];
 }
-function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THREE.Vector3) {
+function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THREE.Vector3, a?: boolean) {
   const box = new THREE.Box3().setFromObject(model);
   const modelActualSize = new THREE.Vector3();
   box.getSize(modelActualSize);
+
+  console.log(modelActualSize);
 
   model.scale.x = size.x / modelActualSize.x;
   model.scale.y = size.y / modelActualSize.y;

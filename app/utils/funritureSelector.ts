@@ -16,6 +16,13 @@ export const furnitureStaticDataRecord = {
     price: 1299,
     modelSource: '/models/king-bed.glb',
   },
+  singleBed: {
+    id: 'singleBed',
+    name: 'Single Bed',
+    size: new THREE.Vector3(0.9, 0.8, 2),
+    price: 499,
+    modelSource: '/models/single-bed.glb',
+  },
   nightstand: {
     id: 'nightstand',
     name: 'Bedside Table',
@@ -40,7 +47,8 @@ export const furnitureStaticDataRecord = {
 } satisfies Record<string, FurnitureStaticData>;
 
 export function furnitureSelector(room: THREE.Vector2): FurnitureComputedData[] {
-  return decisions.bigestBedroom(room);
+  if (room.x >= 3 && room.y >= 3) return decisions.bigestBedroom(room);
+  return decisions.tinyRoom(room);
 }
 
 interface FurnitureComputedData extends FurnitureStaticData {
@@ -49,6 +57,7 @@ interface FurnitureComputedData extends FurnitureStaticData {
 }
 
 export const decisions = {
+  // For rooms at least 300x300
   bigestBedroom(room) {
     const { kingBed, nightstand, wardrobe, dresser } = furnitureStaticDataRecord;
 
@@ -88,6 +97,28 @@ export const decisions = {
           0,
           (room.y / 2) - (dresser.size.z / 2),
         ),
+      },
+    ];
+  },
+  tinyRoom(room: THREE.Vector2) {
+    const { singleBed, nightstand, dresser } = furnitureStaticDataRecord;
+    return [
+      {
+        ...singleBed,
+        position: new THREE.Vector3(-(room.x / 2) + (singleBed.size.x / 2), 0, -(room.y / 2) + (singleBed.size.z / 2)),
+      },
+      {
+        ...nightstand,
+        position: new THREE.Vector3(
+          -(room.x / 2) + (nightstand.size.x / 2) + singleBed.size.x,
+          0,
+          -(room.y / 2) + (nightstand.size.z / 2),
+        ),
+      },
+      {
+        ...dresser,
+        position: new THREE.Vector3((room.x / 2) - (dresser.size.x / 2), 0, (room.y / 2)),
+        rotation: new THREE.Euler(0, Math.PI, 0),
       },
     ];
   },
