@@ -7,16 +7,11 @@ const roomHeight = 2.5;
 type Cords3D = readonly [x: number, y: number, z: number];
 type Cords2D = readonly [x: number, z: number];
 
-export function processRoom(wrapper: HTMLElement, { width, depth, roomType }: {
+export function processRoom(wrapper: HTMLElement, { width, depth, furnitures }: {
   width: number;
   depth: number;
-  roomType: RoomType;
+  furnitures: FurnitureComputedData[];
 }) {
-  const furnitures = furnitureSelector(new THREE.Vector2(
-    width,
-    depth,
-  ), roomType);
-
   const rect = wrapper.getBoundingClientRect();
   const scene = createScene();
 

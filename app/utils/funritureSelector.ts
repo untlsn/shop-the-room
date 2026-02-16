@@ -6,6 +6,7 @@ type FurnitureStaticData = {
   size: THREE.Vector3;
   price: number;
   modelSource: string;
+  color: string;
 };
 
 export const furnitureStaticDataRecord = {
@@ -16,6 +17,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(2, 0.8, 2.1),
     price: 1299,
     modelSource: '/models/king-bed.glb',
+    color: '#FF0000',
   },
   singleBed: {
     id: 'singleBed',
@@ -23,6 +25,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(0.9, 0.8, 2),
     price: 499,
     modelSource: '/models/single-bed.glb',
+    color: '#FF7F00',
   },
   nightstand: {
     id: 'nightstand',
@@ -30,6 +33,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(0.4, 0.5, 0.4),
     price: 149,
     modelSource: '/models/nightstand.glb',
+    color: '#FFFF00',
   },
   wardrobe: {
     id: 'wardrobe',
@@ -37,6 +41,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(1.2, 1.8, 0.6),
     price: 799,
     modelSource: '/models/wardrobe.glb',
+    color: '#8B4513',
   },
   dresser: {
     id: 'dresser',
@@ -44,6 +49,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(1, 1.5, 0.5),
     price: 549,
     modelSource: '/models/dresser.glb',
+    color: '#FFC0CB',
   },
 
   /* Living Room */
@@ -53,6 +59,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(2.2, 0.9, 0.9),
     price: 899,
     modelSource: '/models/large-sofa.glb',
+    color: '#0000FF',
   },
   smallSofa: {
     id: 'smallSofa',
@@ -60,6 +67,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(0.9, 0.9, 1.5),
     price: 599,
     modelSource: '/models/small-sofa.glb',
+    color: '#00FFFF',
   },
   coffeeTable: {
     id: 'coffeeTable',
@@ -67,6 +75,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(1, 0.4, 0.6),
     price: 199,
     modelSource: '/models/coffee-table.glb',
+    color: '#00FF00',
   },
   tvStand: {
     id: 'tvStand',
@@ -74,6 +83,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(1.6, 0.5, 0.4),
     price: 349,
     modelSource: '/models/tv-stand.glb',
+    color: '#800080',
   },
   bookshelf: {
     id: 'bookshelf',
@@ -81,6 +91,7 @@ export const furnitureStaticDataRecord = {
     size: new THREE.Vector3(0.8, 1.8, 0.3),
     price: 249,
     modelSource: '/models/bookshelf.glb',
+    color: '#808080',
   },
 } satisfies Record<string, FurnitureStaticData>;
 
@@ -94,7 +105,7 @@ export function furnitureSelector(room: THREE.Vector2, roomType: RoomType): Furn
   return decisions.tinyRoom(room);
 }
 
-interface FurnitureComputedData extends FurnitureStaticData {
+export interface FurnitureComputedData extends FurnitureStaticData {
   position: THREE.Vector3;
   rotation?: THREE.Euler;
 }
