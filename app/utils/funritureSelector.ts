@@ -167,12 +167,39 @@ export const decisions = {
 
   grandLivingRoom(room: THREE.Vector2) {
     const { largeSofa, coffeeTable, tvStand, bookshelf } = furnitureStaticDataRecord;
+
     return [
-      { ...largeSofa, position: new THREE.Vector3(0, largeSofa.size.y / 2, -(room.y / 2) + (largeSofa.size.z / 2)) },
-      { ...coffeeTable, position: new THREE.Vector3(0, 0, -(room.y / 2) + 1.5) },
+      {
+        ...largeSofa,
+        position: new THREE.Vector3(
+          0,
+          largeSofa.size.y / 2,
+          // Place sofa max 2.5m from tvStand but still inside room
+          Math.max(
+            -(room.y / 2) + (largeSofa.size.z / 2),
+            (room.y / 2) - (largeSofa.size.z / 2) - 2.5,
+          ),
+        ),
+      },
+      {
+        ...coffeeTable,
+        position: new THREE.Vector3(
+          0,
+          0,
+          // Place sofa max 2.5m from tvStand but still inside room
+          Math.max(
+            -(room.y / 2) + 1.5,
+            (room.y / 2) - (largeSofa.size.z / 2) - 1.5,
+          ),
+        ),
+      },
       {
         ...tvStand,
-        position: new THREE.Vector3(0, 0, (room.y / 2) - (tvStand.size.z / 2)),
+        position: new THREE.Vector3(
+          0,
+          0,
+          (room.y / 2) - (tvStand.size.z / 2),
+        ),
         rotation: new THREE.Euler(0, Math.PI, 0),
       },
       {
