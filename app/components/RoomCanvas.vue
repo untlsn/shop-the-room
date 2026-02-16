@@ -9,7 +9,7 @@ onMounted(() => {
     const cleanup = processRoom(rootRef.value, {
       width: roomStore.config.width / 100,
       depth: roomStore.config.depth / 100,
-      roomType: roomStore.config.type,
+      furnitures: roomStore.furnitures,
     });
 
     onCleanup(cleanup);

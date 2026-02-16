@@ -4,12 +4,13 @@ const ROOM_TYPES: { value: RoomType; label: string }[] = [
 ];
 
 export const useRoomStore = defineStore('furniture', () => {
-  const furnitures = ref<PlacedFurniture[]>([]);
   const config = ref<RoomConfig>({
     width: 400,
     depth: 350,
     type: 'bedroom',
   });
+
+  const furnitures = computed(() => furnitureSelector(config.value));
 
   const cartStore = useCartStore();
 
@@ -26,7 +27,6 @@ export const useRoomStore = defineStore('furniture', () => {
 
     generate(values: RoomConfig) {
       config.value = values;
-      furnitures.value = generateLayout(config.value);
       cartStore.clear();
     },
   };
