@@ -8,6 +8,7 @@ export function processRoom(wrapper: HTMLElement, config: {
   width: number;
   depth: number;
   furnitures: FurnitureComputedData[];
+  is3D?: boolean;
 }) {
   const room = new THREE.Vector3(config.width, roomHeight, config.depth);
   const rect = wrapper.getBoundingClientRect();
@@ -16,8 +17,9 @@ export function processRoom(wrapper: HTMLElement, config: {
   const renderer = createRenderer(rect);
   wrapper.appendChild(renderer.domElement);
 
-  const camera = createCamera(rect);
+  const camera = createCamera(rect, room, config.is3D);
   const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enabled = !!config.is3D;
 
   const verticalWallSize = new THREE.Vector2(room.x, room.y);
   const horizontalWallSize = new THREE.Vector2(room.z, room.y);
@@ -87,7 +89,27 @@ function createScene() {
   return scene;
 }
 
-function createCamera(rect: DOMRect) {
+function create2DCamera(rect: DOMRect, room: THREE.Vector3) {
+  const aspect = rect.width / rect.height;
+  const max = Math.max(room.x, room.z);
+
+  const camera = new THREE.OrthographicCamera(
+    -max * aspect / 2,
+    max * aspect / 2,
+    max / 2,
+    -max / 2,
+    0.1,
+    1000,
+  );
+  camera.position.set(0, 3, 0);
+  camera.lookAt(0, 0, 0);
+
+  return camera;
+}
+
+function createCamera(rect: DOMRect, room: THREE.Vector3, is3D?: boolean) {
+  if (!is3D) return create2DCamera(rect, room);
+
   const camera = new THREE.PerspectiveCamera(75, rect.width / rect.height, 0.1, 1000);
   camera.position.set(3, 3, 5);
 
