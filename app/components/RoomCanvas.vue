@@ -5,7 +5,7 @@ const roomStore = useRoomStore();
 
 onMounted(() => {
   watchEffect((onCleanup) => {
-    if (!rootRef.value || !roomStore.config.width || !roomStore.config.depth) return;
+    if (!rootRef.value || !roomStore.config || !roomStore.furnitures) return;
     const cleanup = processRoom(rootRef.value, {
       width: roomStore.config.width / 100,
       depth: roomStore.config.depth / 100,

@@ -4,13 +4,13 @@ const ROOM_TYPES: { value: RoomType; label: string }[] = [
 ];
 
 export const useRoomStore = defineStore('furniture', () => {
-  const config = ref<RoomConfig>({
-    width: 400,
-    depth: 350,
-    type: 'bedroom',
-  });
+  const config = ref<RoomConfig | undefined>();
 
-  const furnitures = computed(() => furnitureSelector(config.value));
+  const furnitures = computed(() => {
+    if (!config.value) return [];
+
+    return furnitureSelector(config.value);
+  });
 
   const cartStore = useCartStore();
 
