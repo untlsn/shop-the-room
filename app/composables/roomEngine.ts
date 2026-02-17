@@ -2,8 +2,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const roomHeight = 2.5;
-
 type Nil = null | undefined;
 
 export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
@@ -11,55 +9,60 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
 
   const roomStore = useRoomStore();
 
+  const room = computed(() => {
+    if (!roomStore.config) return undefined;
+
+    return new THREE.Vector3(roomStore.config.width / 100, 2.5, roomStore.config.depth / 100);
+  });
+
   onMounted(() => {
     watchEffect((onCleanup) => {
       const wrapper = rootRef.value!;
-      if (!wrapper || !roomStore.config || !roomStore.furnitures) return;
-      const room = new THREE.Vector3(roomStore.config.width / 100, roomHeight, roomStore.config.depth / 100);
+      if (!wrapper || !room.value || !roomStore.furnitures) return;
       const rect = wrapper.getBoundingClientRect();
       const scene = createScene();
 
       const renderer = createRenderer(rect);
       wrapper.appendChild(renderer.domElement);
 
-      const [camera3D, camera2D] = createCameras(rect, room);
+      const [camera3D, camera2D] = createCameras(rect, room.value);
       const controls = new OrbitControls(camera3D, renderer.domElement);
       watchEffect(() => {
         controls.enabled = !!is3D.value;
       });
 
-      const verticalWallSize = new THREE.Vector2(room.x, room.y);
-      const horizontalWallSize = new THREE.Vector2(room.z, room.y);
+      const verticalWallSize = new THREE.Vector2(room.value.x, room.value.y);
+      const horizontalWallSize = new THREE.Vector2(room.value.z, room.value.y);
       const wallTexture = createWallTexture();
 
       scene.add(
         createWall({
           size: verticalWallSize,
-          position: convertEdgeToCenter(0, roomHeight, room.z),
+          position: convertEdgeToCenter(0, room.value.y, room.value.z),
           rotation: Math.PI,
           texture: wallTexture,
         }),
         createWall({
           size: verticalWallSize,
-          position: convertEdgeToCenter(0, roomHeight, -room.z),
+          position: convertEdgeToCenter(0, room.value.y, -room.value.z),
           rotation: 0,
           texture: wallTexture,
         }),
         createWall({
           size: horizontalWallSize,
-          position: convertEdgeToCenter(room.x, roomHeight, 0),
+          position: convertEdgeToCenter(room.value.x, room.value.y, 0),
           rotation: Math.PI / -2,
           texture: wallTexture,
         }),
         createWall({
           size: horizontalWallSize,
-          position: convertEdgeToCenter(-room.x, roomHeight, 0),
+          position: convertEdgeToCenter(-room.value.x, room.value.y, 0),
           rotation: Math.PI / 2,
           texture: wallTexture,
         }),
-        createFloor(room.x, room.z),
+        createFloor(room.value.x, room.value.z),
         new THREE.AmbientLight(0xffffff, 1),
-        createPointLight(),
+        createPointLight(room.value.y),
       );
 
       const loader = new GLTFLoader();
@@ -210,9 +213,9 @@ function createFloor(x: number, y: number) {
 
   return floor;
 }
-function createPointLight() {
+function createPointLight(roomY: number) {
   const pointLight = new THREE.PointLight(0xffffff, 5);
-  pointLight.position.set(0.5, roomHeight, 0.5);
+  pointLight.position.set(0.5, roomY, 0.5);
 
   return pointLight;
 }
@@ -225,7 +228,7 @@ function createPointLight() {
 function convertEdgeToCenter(x: number, y: number, z: number): THREE.Vector3 {
   return new THREE.Vector3(x / 2, y / 2, z / 2);
 }
-function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THREE.Vector3, a?: boolean) {
+function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THREE.Vector3) {
   const box = new THREE.Box3().setFromObject(model);
   const modelActualSize = new THREE.Vector3();
   box.getSize(modelActualSize);
