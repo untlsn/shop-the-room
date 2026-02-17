@@ -4,6 +4,32 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const roomHeight = 2.5;
 
+type Nil = null | undefined;
+
+export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
+  const is3D = ref(false);
+
+  const roomStore = useRoomStore();
+
+  onMounted(() => {
+    watchEffect((onCleanup) => {
+      if (!rootRef.value || !roomStore.config || !roomStore.furnitures) return;
+      const cleanup = processRoom(rootRef.value, {
+        width: roomStore.config.width / 100,
+        depth: roomStore.config.depth / 100,
+        furnitures: roomStore.furnitures,
+        is3D: is3D,
+      });
+
+      onCleanup(cleanup);
+    });
+  });
+
+  return {
+    is3D,
+  };
+}
+
 export function processRoom(wrapper: HTMLElement, config: {
   width: number;
   depth: number;

@@ -1,23 +1,7 @@
 <script setup lang="ts">
 const rootRef = useTemplateRef('root');
 
-const roomStore = useRoomStore();
-
-const is3D = ref(false);
-
-onMounted(() => {
-  watchEffect((onCleanup) => {
-    if (!rootRef.value || !roomStore.config || !roomStore.furnitures) return;
-    const cleanup = processRoom(rootRef.value, {
-      width: roomStore.config.width / 100,
-      depth: roomStore.config.depth / 100,
-      furnitures: roomStore.furnitures,
-      is3D: is3D,
-    });
-
-    onCleanup(cleanup);
-  });
-});
+const { is3D } = useRoomEngine(rootRef);
 </script>
 
 <template>
