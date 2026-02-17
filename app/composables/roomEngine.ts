@@ -17,6 +17,8 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
 
   const { data: wallMaterial } = useQuery(wallMaterialQuery);
 
+  const { data: furnitureModels } = useFurnitureModelsQuery(() => roomStore.furnitures.map(x => x.modelSource));
+
   onMounted(() => {
     const verticalWallSize = computed(() => room.value ? new THREE.Vector2(room.value.x, room.value.y) : undefined);
     const horizontalWallSize = computed(() => room.value ? new THREE.Vector2(room.value.z, room.value.y) : undefined);
@@ -48,9 +50,12 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
       }),
     ];
 
+    const floor = createFloor(room);
+    const lights = [new THREE.AmbientLight(0xffffff, 1), createPointLight(room)];
+
     watchEffect((onCleanup) => {
       const wrapper = rootRef.value!;
-      if (!wrapper || !room.value || !roomStore.furnitures) return;
+      if (!wrapper || !room.value) return;
       const rect = wrapper.getBoundingClientRect();
       const scene = createScene();
 
@@ -65,19 +70,26 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
 
       scene.add(
         ...walls,
-        createFloor(room.value.x, room.value.z),
-        new THREE.AmbientLight(0xffffff, 1),
-        createPointLight(room.value.y),
+        floor,
+        ...lights,
       );
 
-      const loader = new GLTFLoader();
+      watchEffect(() => {
+        if (!furnitureModels.value) return;
 
-      roomStore.furnitures.forEach(async (furniture) => {
-        const { scene: model } = await loader.loadAsync(furniture.modelSource);
-        setAbsoluteScale(model, furniture.size);
-        model.position.copy(furniture.position);
-        if (furniture.rotation) model.rotation.copy(furniture.rotation);
-        scene.add(model);
+        const models = furnitureModels.value.map((model, i) => {
+          const furniture = roomStore.furnitures[i]!;
+          setAbsoluteScale(model, furniture.size);
+          model.position.copy(furniture.position);
+          if (furniture.rotation) model.rotation.copy(furniture.rotation);
+          return model;
+        });
+
+        scene.add(...models);
+
+        onCleanup(async () => {
+          scene.remove(...models);
+        });
       });
 
       const loop = () => {
@@ -201,6 +213,23 @@ function createFloorTexture() {
   };
 }
 
+function useFurnitureModelsQuery(sources: () => string[]) {
+  return useQuery({
+    key: () => ['furnitures', sources()] as const,
+    query: async () => {
+      const loader = new GLTFLoader();
+
+      return Promise.all(
+        sources().map(async (source) => {
+          const { scene: model } = await loader.loadAsync(source);
+          return model;
+        }),
+      );
+    },
+    enabled: () => !!sources()?.length,
+  });
+}
+
 const wallMaterialQuery = defineQueryOptions(() => {
   return {
     key: ['wallMaterial'],
@@ -226,21 +255,32 @@ const wallMaterialQuery = defineQueryOptions(() => {
   };
 });
 
-function createFloor(x: number, y: number) {
+function createFloor(room: Ref<THREE.Vector3 | undefined>) {
   const material = new THREE.MeshStandardMaterial({
     ...createFloorTexture(),
     roughness: 0.8,
   });
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(x, y), material);
+  const floor = new THREE.Mesh();
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
+  floor.material = material;
+
+  watchEffect(() => {
+    if (!room.value) return;
+    floor.geometry = new THREE.PlaneGeometry(room.value.x, room.value.z);
+  });
 
   return floor;
 }
-function createPointLight(roomY: number) {
+function createPointLight(room: Ref<THREE.Vector3 | undefined>) {
   const pointLight = new THREE.PointLight(0xffffff, 5);
-  pointLight.position.set(0.5, roomY, 0.5);
+  pointLight.position.set(0.5, 0, 0.5);
+
+  watchEffect(() => {
+    if (!room.value) return;
+    pointLight.position.y = room.value.y;
+  });
 
   return pointLight;
 }
