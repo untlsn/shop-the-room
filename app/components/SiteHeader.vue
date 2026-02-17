@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const cartStore = useCartStore();
+const cartCount = computed(() => cartStore.items.length || 4);
 </script>
 
 <template>
@@ -28,24 +30,17 @@
         </span>
       </nav>
 
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="relative flex items-center justify-center w-9 h-9 rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      <UChip
+        :text="cartCount"
+        size="3xl"
+      >
+        <UButton
+          color="neutral"
+          variant="outline"
+          icon="lucide:shopping-cart"
           :aria-label="`Cart with ${cartCount} items`"
-        >
-          <UIcon
-            name="lucide:shopping-cart"
-            class="size-4"
-          />
-          <span
-            v-if="cartCount > 0"
-            class="absolute -top-1.5 -right-1.5 flex items-center justify-center size-4 rounded-full bg-accent text-[10px] font-bold text-accent-foreground"
-          >
-            {{ cartCount }}
-          </span>
-        </button>
-      </div>
+        />
+      </UChip>
     </div>
   </header>
 </template>
