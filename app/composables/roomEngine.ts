@@ -13,98 +13,83 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
 
   onMounted(() => {
     watchEffect((onCleanup) => {
-      if (!rootRef.value || !roomStore.config || !roomStore.furnitures) return;
-      const cleanup = processRoom(rootRef.value, {
-        width: roomStore.config.width / 100,
-        depth: roomStore.config.depth / 100,
-        furnitures: roomStore.furnitures,
-        is3D: is3D,
+      const wrapper = rootRef.value!;
+      if (!wrapper || !roomStore.config || !roomStore.furnitures) return;
+      const room = new THREE.Vector3(roomStore.config.width / 100, roomHeight, roomStore.config.depth / 100);
+      const rect = wrapper.getBoundingClientRect();
+      const scene = createScene();
+
+      const renderer = createRenderer(rect);
+      wrapper.appendChild(renderer.domElement);
+
+      const [camera3D, camera2D] = createCameras(rect, room);
+      const controls = new OrbitControls(camera3D, renderer.domElement);
+      watchEffect(() => {
+        controls.enabled = !!is3D.value;
       });
 
-      onCleanup(cleanup);
+      const verticalWallSize = new THREE.Vector2(room.x, room.y);
+      const horizontalWallSize = new THREE.Vector2(room.z, room.y);
+      const wallTexture = createWallTexture();
+
+      scene.add(
+        createWall({
+          size: verticalWallSize,
+          position: convertEdgeToCenter(0, roomHeight, room.z),
+          rotation: Math.PI,
+          texture: wallTexture,
+        }),
+        createWall({
+          size: verticalWallSize,
+          position: convertEdgeToCenter(0, roomHeight, -room.z),
+          rotation: 0,
+          texture: wallTexture,
+        }),
+        createWall({
+          size: horizontalWallSize,
+          position: convertEdgeToCenter(room.x, roomHeight, 0),
+          rotation: Math.PI / -2,
+          texture: wallTexture,
+        }),
+        createWall({
+          size: horizontalWallSize,
+          position: convertEdgeToCenter(-room.x, roomHeight, 0),
+          rotation: Math.PI / 2,
+          texture: wallTexture,
+        }),
+        createFloor(room.x, room.z),
+        new THREE.AmbientLight(0xffffff, 1),
+        createPointLight(),
+      );
+
+      const loader = new GLTFLoader();
+
+      roomStore.furnitures.forEach(async (furniture) => {
+        const { scene: model } = await loader.loadAsync(furniture.modelSource);
+        setAbsoluteScale(model, furniture.size);
+        model.position.copy(furniture.position);
+        if (furniture.rotation) model.rotation.copy(furniture.rotation);
+        scene.add(model);
+      });
+
+      const loop = () => {
+        animationId = requestAnimationFrame(loop);
+        controls.update();
+        renderer.render(scene, is3D.value ? camera3D : camera2D);
+      };
+
+      let animationId = requestAnimationFrame(loop);
+
+      onCleanup(() => {
+        cancelAnimationFrame(animationId);
+        renderer.domElement.remove();
+        renderer.dispose();
+      });
     });
   });
 
   return {
     is3D,
-  };
-}
-
-export function processRoom(wrapper: HTMLElement, config: {
-  width: number;
-  depth: number;
-  furnitures: FurnitureComputedData[];
-  is3D: Ref<boolean>;
-}) {
-  const room = new THREE.Vector3(config.width, roomHeight, config.depth);
-  const rect = wrapper.getBoundingClientRect();
-  const scene = createScene();
-
-  const renderer = createRenderer(rect);
-  wrapper.appendChild(renderer.domElement);
-
-  const [camera3D, camera2D] = createCameras(rect, room);
-  const controls = new OrbitControls(camera3D, renderer.domElement);
-  watchEffect(() => {
-    controls.enabled = !!config.is3D.value;
-  });
-
-  const verticalWallSize = new THREE.Vector2(room.x, room.y);
-  const horizontalWallSize = new THREE.Vector2(room.z, room.y);
-  const wallTexture = createWallTexture();
-
-  scene.add(
-    createWall({
-      size: verticalWallSize,
-      position: convertEdgeToCenter(0, roomHeight, room.z),
-      rotation: Math.PI,
-      texture: wallTexture,
-    }),
-    createWall({
-      size: verticalWallSize,
-      position: convertEdgeToCenter(0, roomHeight, -room.z),
-      rotation: 0,
-      texture: wallTexture,
-    }),
-    createWall({
-      size: horizontalWallSize,
-      position: convertEdgeToCenter(room.x, roomHeight, 0),
-      rotation: Math.PI / -2,
-      texture: wallTexture,
-    }),
-    createWall({
-      size: horizontalWallSize,
-      position: convertEdgeToCenter(-room.x, roomHeight, 0),
-      rotation: Math.PI / 2,
-      texture: wallTexture,
-    }),
-    createFloor(room.x, room.z),
-    new THREE.AmbientLight(0xffffff, 1),
-    createPointLight(),
-  );
-
-  const loader = new GLTFLoader();
-
-  config.furnitures.forEach(async (furniture) => {
-    const { scene: model } = await loader.loadAsync(furniture.modelSource);
-    setAbsoluteScale(model, furniture.size);
-    model.position.copy(furniture.position);
-    if (furniture.rotation) model.rotation.copy(furniture.rotation);
-    scene.add(model);
-  });
-
-  const loop = () => {
-    animationId = requestAnimationFrame(loop);
-    controls.update();
-    renderer.render(scene, config.is3D.value ? camera3D : camera2D);
-  };
-
-  let animationId = requestAnimationFrame(loop);
-
-  return () => {
-    cancelAnimationFrame(animationId);
-    renderer.domElement.remove();
-    renderer.dispose();
   };
 }
 
