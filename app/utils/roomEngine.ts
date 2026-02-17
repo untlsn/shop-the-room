@@ -8,7 +8,7 @@ export function processRoom(wrapper: HTMLElement, config: {
   width: number;
   depth: number;
   furnitures: FurnitureComputedData[];
-  is3D?: boolean;
+  is3D: Ref<boolean>;
 }) {
   const room = new THREE.Vector3(config.width, roomHeight, config.depth);
   const rect = wrapper.getBoundingClientRect();
@@ -17,9 +17,11 @@ export function processRoom(wrapper: HTMLElement, config: {
   const renderer = createRenderer(rect);
   wrapper.appendChild(renderer.domElement);
 
-  const camera = createCamera(rect, room, config.is3D);
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enabled = !!config.is3D;
+  const [camera3D, camera2D] = createCameras(rect, room);
+  const controls = new OrbitControls(camera3D, renderer.domElement);
+  watchEffect(() => {
+    controls.enabled = !!config.is3D.value;
+  });
 
   const verticalWallSize = new THREE.Vector2(room.x, room.y);
   const horizontalWallSize = new THREE.Vector2(room.z, room.y);
@@ -65,15 +67,13 @@ export function processRoom(wrapper: HTMLElement, config: {
     scene.add(model);
   });
 
-  let animationId: number;
-
   const loop = () => {
     animationId = requestAnimationFrame(loop);
     controls.update();
-    renderer.render(scene, camera);
+    renderer.render(scene, config.is3D.value ? camera3D : camera2D);
   };
 
-  loop();
+  let animationId = requestAnimationFrame(loop);
 
   return () => {
     cancelAnimationFrame(animationId);
@@ -107,13 +107,18 @@ function create2DCamera(rect: DOMRect, room: THREE.Vector3) {
   return camera;
 }
 
-function createCamera(rect: DOMRect, room: THREE.Vector3, is3D?: boolean) {
-  if (!is3D) return create2DCamera(rect, room);
-
+function create3DCamera(rect: DOMRect) {
   const camera = new THREE.PerspectiveCamera(75, rect.width / rect.height, 0.1, 1000);
   camera.position.set(3, 3, 5);
 
   return camera;
+}
+
+function createCameras(rect: DOMRect, room: THREE.Vector3) {
+  return [
+    create3DCamera(rect),
+    create2DCamera(rect, room),
+  ] as const;
 }
 function createRenderer(rect: DOMRect) {
   const renderer = new THREE.WebGLRenderer({ antialias: true });

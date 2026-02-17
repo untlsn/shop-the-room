@@ -12,7 +12,7 @@ onMounted(() => {
       width: roomStore.config.width / 100,
       depth: roomStore.config.depth / 100,
       furnitures: roomStore.furnitures,
-      is3D: is3D.value,
+      is3D: is3D,
     });
 
     onCleanup(cleanup);
