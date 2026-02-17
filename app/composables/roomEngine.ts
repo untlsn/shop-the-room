@@ -15,7 +15,39 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
     return new THREE.Vector3(roomStore.config.width / 100, 2.5, roomStore.config.depth / 100);
   });
 
+  const { data: wallMaterial } = useQuery(wallMaterialQuery);
+
   onMounted(() => {
+    const verticalWallSize = computed(() => room.value ? new THREE.Vector2(room.value.x, room.value.y) : undefined);
+    const horizontalWallSize = computed(() => room.value ? new THREE.Vector2(room.value.z, room.value.y) : undefined);
+
+    const walls = [
+      createWall({
+        size: verticalWallSize,
+        position: computed(() => room.value ? convertEdgeToCenter(0, room.value.y, room.value.z) : undefined),
+        rotation: Math.PI,
+        material: wallMaterial,
+      }),
+      createWall({
+        size: verticalWallSize,
+        position: computed(() => room.value ? convertEdgeToCenter(0, room.value.y, -room.value.z) : undefined),
+        rotation: 0,
+        material: wallMaterial,
+      }),
+      createWall({
+        size: horizontalWallSize,
+        position: computed(() => room.value ? convertEdgeToCenter(room.value.x, room.value.y, 0) : undefined),
+        rotation: Math.PI / -2,
+        material: wallMaterial,
+      }),
+      createWall({
+        size: horizontalWallSize,
+        position: computed(() => room.value ? convertEdgeToCenter(-room.value.x, room.value.y, 0) : undefined),
+        rotation: Math.PI / 2,
+        material: wallMaterial,
+      }),
+    ];
+
     watchEffect((onCleanup) => {
       const wrapper = rootRef.value!;
       if (!wrapper || !room.value || !roomStore.furnitures) return;
@@ -31,35 +63,8 @@ export function useRoomEngine(rootRef: Ref<HTMLElement | Nil>) {
         controls.enabled = !!is3D.value;
       });
 
-      const verticalWallSize = new THREE.Vector2(room.value.x, room.value.y);
-      const horizontalWallSize = new THREE.Vector2(room.value.z, room.value.y);
-      const wallTexture = createWallTexture();
-
       scene.add(
-        createWall({
-          size: verticalWallSize,
-          position: convertEdgeToCenter(0, room.value.y, room.value.z),
-          rotation: Math.PI,
-          texture: wallTexture,
-        }),
-        createWall({
-          size: verticalWallSize,
-          position: convertEdgeToCenter(0, room.value.y, -room.value.z),
-          rotation: 0,
-          texture: wallTexture,
-        }),
-        createWall({
-          size: horizontalWallSize,
-          position: convertEdgeToCenter(room.value.x, room.value.y, 0),
-          rotation: Math.PI / -2,
-          texture: wallTexture,
-        }),
-        createWall({
-          size: horizontalWallSize,
-          position: convertEdgeToCenter(-room.value.x, room.value.y, 0),
-          rotation: Math.PI / 2,
-          texture: wallTexture,
-        }),
+        ...walls,
         createFloor(room.value.x, room.value.z),
         new THREE.AmbientLight(0xffffff, 1),
         createPointLight(room.value.y),
@@ -141,24 +146,36 @@ function createRenderer(rect: DOMRect) {
   return renderer;
 }
 
-function createWall({ size, position, rotation, texture }: {
-  size: THREE.Vector2;
-  position: THREE.Vector3;
+function createWall({ size, position, rotation, material }: {
+  size: Ref<THREE.Vector2 | undefined>;
+  position: Ref<THREE.Vector3 | undefined>;
   rotation: number;
-  texture: ReturnType<typeof createWallTexture>;
+  material: Ref<THREE.MeshStandardMaterial | undefined>;
 }) {
-  const material = new THREE.MeshStandardMaterial({ color: 0xeeeeee, ...texture });
-  const geometry = new THREE.PlaneGeometry(...size);
-  geometry.setAttribute('uv2', new THREE.BufferAttribute(geometry.attributes.uv!.array, 2));
+  const wall = Object.assign(new THREE.Mesh(), {
+    receiveShadow: true,
+    castShadow: true,
+  });
 
-  const wall = new THREE.Mesh(geometry, material);
-  wall.position.copy(position); // Ustawienie na krawędzi podłogi
-  wall.receiveShadow = true;
-  wall.castShadow = true;
+  watchEffect(() => {
+    if (material.value) wall.material = material.value;
+  });
+
+  watchEffect(() => {
+    if (!size.value) return;
+    const geometry = new THREE.PlaneGeometry(...size.value);
+    geometry.setAttribute('uv2', new THREE.BufferAttribute(geometry.attributes.uv!.array, 2));
+
+    wall.geometry = geometry;
+    onWatcherCleanup(() => {
+      geometry.dispose();
+    });
+  });
+  watchEffect(() => {
+    if (position.value) wall.position.copy(position.value);
+  });
 
   wall.rotation.y = rotation;
-
-  material.side = THREE.FrontSide;
 
   return wall;
 }
@@ -184,22 +201,30 @@ function createFloorTexture() {
   };
 }
 
-function createWallTexture() {
-  const loader = new THREE.TextureLoader();
-
-  const normalMap = loader.load('/textures/Plaster001_1K-JPG/Plaster001_1K-JPG_NormalDX.jpg');
-  const roughnessMap = loader.load('/textures/Plaster001_1K-JPG/Plaster001_1K-JPG_Roughness.jpg');
-
-  [normalMap, roughnessMap].forEach((texture) => {
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(4, 4);
-  });
-
+const wallMaterialQuery = defineQueryOptions(() => {
   return {
-    normalMap,
-    roughnessMap,
+    key: ['wallMaterial'],
+    query: async () => {
+      if (import.meta.server) return undefined;
+      const loader = new THREE.TextureLoader();
+
+      const normalMap = await loader.loadAsync('/textures/Plaster001_1K-JPG/Plaster001_1K-JPG_NormalDX.jpg');
+      const roughnessMap = await loader.loadAsync('/textures/Plaster001_1K-JPG/Plaster001_1K-JPG_Roughness.jpg');
+
+      addTextureWrapping(normalMap);
+      addTextureWrapping(roughnessMap);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xeeeeee,
+        normalMap,
+        roughnessMap,
+      });
+      material.side = THREE.FrontSide;
+
+      return material;
+    },
   };
-}
+});
 
 function createFloor(x: number, y: number) {
   const material = new THREE.MeshStandardMaterial({
@@ -238,4 +263,8 @@ function setAbsoluteScale(model: THREE.Group<THREE.Object3DEventMap>, size: THRE
   model.scale.x = size.x / modelActualSize.x;
   model.scale.y = size.y / modelActualSize.y;
   model.scale.z = size.z / modelActualSize.z;
+}
+function addTextureWrapping(texture: THREE.Texture<HTMLImageElement>) {
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 4);
 }
